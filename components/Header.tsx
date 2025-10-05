@@ -38,6 +38,11 @@ export default function Header() {
               <Link href="/orders" className="hover:text-primary-600 transition">
                 Orders
               </Link>
+              {user.role === 'admin' && (
+                <Link href="/admin" className="hover:text-primary-600 transition font-medium">
+                  Admin Panel 🔧
+                </Link>
+              )}
               <div className="flex items-center gap-3">
                 <span className="text-sm text-gray-600">
                   Hi, {user.first_name}

@@ -64,4 +64,38 @@ export const api = {
     fetchAPI('/api/orders', { headers: { Authorization: `Bearer ${token}` } }),
   getOrder: (id: string, token: string) => 
     fetchAPI(`/api/orders/${id}`, { headers: { Authorization: `Bearer ${token}` } }),
+
+  // Admin - Products
+  createProduct: (data: any, token: string) =>
+    fetchAPI('/api/admin/products', { method: 'POST', body: JSON.stringify(data), headers: { Authorization: `Bearer ${token}` } }),
+  updateProduct: (id: string, data: any, token: string) =>
+    fetchAPI(`/api/admin/products/${id}`, { method: 'PUT', body: JSON.stringify(data), headers: { Authorization: `Bearer ${token}` } }),
+  deleteProduct: (id: string, token: string) =>
+    fetchAPI(`/api/admin/products/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } }),
+  
+  // Admin - Orders
+  getAllOrders: (token: string) =>
+    fetchAPI('/api/admin/orders', { headers: { Authorization: `Bearer ${token}` } }),
+  updateOrderStatus: (id: string, status: string, token: string) =>
+    fetchAPI(`/api/admin/orders/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }), headers: { Authorization: `Bearer ${token}` } }),
+  
+  // Admin - Users
+  getAllUsers: (token: string) =>
+    fetchAPI('/api/admin/users', { headers: { Authorization: `Bearer ${token}` } }),
+  updateUserStatus: (id: string, is_active: boolean, token: string) =>
+    fetchAPI(`/api/admin/users/${id}/status`, { method: 'PUT', body: JSON.stringify({ is_active }), headers: { Authorization: `Bearer ${token}` } }),
+  updateUserRole: (id: string, role: string, token: string) =>
+    fetchAPI(`/api/admin/users/${id}/role`, { method: 'PUT', body: JSON.stringify({ role }), headers: { Authorization: `Bearer ${token}` } }),
+  
+  // Admin - Categories
+  createCategory: (data: any, token: string) =>
+    fetchAPI('/api/admin/categories', { method: 'POST', body: JSON.stringify(data), headers: { Authorization: `Bearer ${token}` } }),
+  updateCategory: (id: string, data: any, token: string) =>
+    fetchAPI(`/api/admin/categories/${id}`, { method: 'PUT', body: JSON.stringify(data), headers: { Authorization: `Bearer ${token}` } }),
+  deleteCategory: (id: string, token: string) =>
+    fetchAPI(`/api/admin/categories/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } }),
+  
+  // Admin - Stats
+  getDashboardStats: (token: string) =>
+    fetchAPI('/api/admin/stats', { headers: { Authorization: `Bearer ${token}` } }),
 };
