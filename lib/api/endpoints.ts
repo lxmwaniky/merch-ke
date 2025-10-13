@@ -6,6 +6,7 @@ import type {
   CategoriesResponse,
   ProductImagesResponse,
   CartResponse,
+  Order,
   OrderResponse,
   OrdersResponse,
   PointsResponse,

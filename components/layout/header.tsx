@@ -36,6 +36,14 @@ export default function Header() {
                         >
                             Categories
                         </Link>
+                        {user && (
+                            <Link
+                                href="/orders"
+                                className="text-sm font-medium transition-colors hover:text-primary"
+                            >
+                                My Orders
+                            </Link>
+                        )}
                     </nav>
 
                     {/* Right Side Actions */}
@@ -123,6 +131,15 @@ export default function Header() {
                             >
                                 Categories
                             </Link>
+                            {user && (
+                                <Link
+                                    href="/orders"
+                                    className="text-sm font-medium transition-colors hover:text-primary"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                >
+                                    My Orders
+                                </Link>
+                            )}
                             {user ? (
                                 <div className="space-y-4">
                                     <div className="flex items-center space-x-2">
