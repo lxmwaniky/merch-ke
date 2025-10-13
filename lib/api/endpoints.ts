@@ -120,8 +120,17 @@ export const createOrder = async (data: {
   payment_method: string;
   notes?: string;
 }): Promise<OrderResponse> => {
-  const response = await api.post<OrderResponse>("/api/orders", data);
-  return response.data;
+  console.log("📦 Creating order with data:", data);
+  try {
+    const response = await api.post<OrderResponse>("/api/orders", data);
+    console.log("✅ Order created successfully:", response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error("❌ Order creation failed:", error);
+    console.error("Error response:", error.response?.data);
+    console.error("Error status:", error.response?.status);
+    throw error;
+  }
 };
 
 export const getOrder = async (id: number): Promise<Order> => {

@@ -112,7 +112,7 @@ export default function RegisterPage() {
                   required
                   value={formData.first_name}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="w-full px-4 py-2 border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                   placeholder="John"
                 />
               </div>
@@ -128,7 +128,7 @@ export default function RegisterPage() {
                   required
                   value={formData.last_name}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="w-full px-4 py-2 border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                   placeholder="Doe"
                 />
               </div>
@@ -146,7 +146,7 @@ export default function RegisterPage() {
                 required
                 value={formData.username}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full px-4 py-2 border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="johndoe"
               />
             </div>
@@ -163,7 +163,7 @@ export default function RegisterPage() {
                 required
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full px-4 py-2 border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="you@example.com"
               />
             </div>
@@ -180,7 +180,7 @@ export default function RegisterPage() {
                 required
                 value={formData.phone}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full px-4 py-2 border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="+254712345678"
               />
             </div>
@@ -199,7 +199,7 @@ export default function RegisterPage() {
                   minLength={6}
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring pr-10"
+                  className="w-full px-4 py-2 border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring pr-10"
                   placeholder="••••••••"
                 />
                 <button

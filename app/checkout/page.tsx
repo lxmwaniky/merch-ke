@@ -74,10 +74,13 @@ export default function CheckoutPage() {
 
   const fetchCart = async () => {
     try {
+      console.log("Fetching cart for checkout...");
       const data = await getCart();
+      console.log("Cart data received:", data);
       const items = data.items || [];
       
       if (items.length === 0) {
+        console.log("Cart is empty, redirecting to cart page");
         showToast("Your cart is empty", "error");
         router.push("/cart");
         return;
@@ -89,6 +92,7 @@ export default function CheckoutPage() {
 
       setCartItems(items);
       setSubtotal(data.subtotal || calculatedSubtotal);
+      console.log("Cart loaded successfully:", items.length, "items, subtotal:", calculatedSubtotal);
     } catch (err) {
       console.error("Failed to load cart:", err);
       showToast("Failed to load cart", "error");
@@ -131,16 +135,46 @@ export default function CheckoutPage() {
       return;
     }
 
+    if (!cartItems || cartItems.length === 0) {
+      showToast("Your cart is empty. Please add items before placing an order.", "error");
+      return;
+    }
+
+    if (subtotal <= 0) {
+      showToast("Invalid cart total. Please refresh and try again.", "error");
+      return;
+    }
+
+    if (!user) {
+      showToast("Please log in to place an order.", "error");
+      router.push('/auth/login');
+      return;
+    }
+
     setIsPlacingOrder(true);
     
     try {
+      // Prepare the shipping address string for notes
+      const addressString = `${selectedAddress.first_name} ${selectedAddress.last_name}, ${selectedAddress.phone}\n${selectedAddress.address_line1}${selectedAddress.address_line2 ? ', ' + selectedAddress.address_line2 : ''}\n${selectedAddress.city}, ${selectedAddress.county} ${selectedAddress.postal_code}`;
+      
       const orderData = {
         payment_method: paymentMethod,
-        notes: orderNotes || undefined,
-        // For now, we'll handle shipping address in the notes
-        // In a real app, you'd send shipping_address_id
+        notes: orderNotes ? `${addressString}\n\nAdditional Notes: ${orderNotes}` : addressString,
+        // Ensure we don't send any session_id or shipping_address_id that might cause DB issues
       };
 
+      console.log("Placing order with data:", orderData);
+      console.log("Current user:", user);
+      console.log("Current cart items:", cartItems);
+      console.log("Cart subtotal:", subtotal);
+      
+      // Check authentication status
+      const token = localStorage.getItem('auth_token');
+      console.log("Auth token present:", !!token);
+      if (token) {
+        console.log("Token preview:", token.substring(0, 20) + "...");
+      }
+      
       const response = await createOrder(orderData);
       
       showToast("Order placed successfully!");
@@ -151,10 +185,27 @@ export default function CheckoutPage() {
       
     } catch (err: any) {
       console.error("Failed to place order:", err);
-      showToast(
-        err.response?.data?.error || "Failed to place order. Please try again.",
-        "error"
-      );
+      console.error("Error response:", err.response?.data);
+      console.error("Error status:", err.response?.status);
+      
+      let errorMessage = "Failed to place order. Please try again.";
+      
+      if (err.response?.data?.error) {
+        errorMessage = err.response.data.error;
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.response?.status === 500) {
+        // Check for specific database schema error
+        if (err.response?.data?.details?.includes?.('column "session_id"')) {
+          errorMessage = "Order system is currently being updated. Please try again in a few minutes or contact support.";
+        } else {
+          errorMessage = "Server error. Please check if you have items in your cart and try again.";
+        }
+      } else if (err.response?.status === 401) {
+        errorMessage = "Please log in to place an order.";
+      }
+      
+      showToast(errorMessage, "error");
     } finally {
       setIsPlacingOrder(false);
     }
@@ -290,7 +341,7 @@ export default function CheckoutPage() {
                       type="text"
                       value={newAddress.first_name}
                       onChange={(e) => handleAddressChange("first_name", e.target.value)}
-                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                      className="w-full px-3 py-2 border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                       required
                     />
                   </div>
@@ -302,7 +353,7 @@ export default function CheckoutPage() {
                       type="text"
                       value={newAddress.last_name}
                       onChange={(e) => handleAddressChange("last_name", e.target.value)}
-                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                      className="w-full px-3 py-2 border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                       required
                     />
                   </div>
@@ -315,7 +366,7 @@ export default function CheckoutPage() {
                       value={newAddress.phone}
                       onChange={(e) => handleAddressChange("phone", e.target.value)}
                       placeholder="+254712345678"
-                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                      className="w-full px-3 py-2 border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                       required
                     />
                   </div>
@@ -326,7 +377,7 @@ export default function CheckoutPage() {
                     <select
                       value={newAddress.county}
                       onChange={(e) => handleAddressChange("county", e.target.value)}
-                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                      className="w-full px-3 py-2 border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                       required
                     >
                       <option value="">Select County</option>
@@ -347,7 +398,7 @@ export default function CheckoutPage() {
                       type="text"
                       value={newAddress.city}
                       onChange={(e) => handleAddressChange("city", e.target.value)}
-                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                      className="w-full px-3 py-2 border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                       required
                     />
                   </div>
@@ -360,7 +411,7 @@ export default function CheckoutPage() {
                       value={newAddress.postal_code}
                       onChange={(e) => handleAddressChange("postal_code", e.target.value)}
                       placeholder="00100"
-                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                      className="w-full px-3 py-2 border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                     />
                   </div>
                   <div className="md:col-span-2">
@@ -372,7 +423,7 @@ export default function CheckoutPage() {
                       value={newAddress.address_line1}
                       onChange={(e) => handleAddressChange("address_line1", e.target.value)}
                       placeholder="Street address, P.O. Box, etc."
-                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                      className="w-full px-3 py-2 border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                       required
                     />
                   </div>
@@ -385,7 +436,7 @@ export default function CheckoutPage() {
                       value={newAddress.address_line2}
                       onChange={(e) => handleAddressChange("address_line2", e.target.value)}
                       placeholder="Apartment, suite, unit, building, floor, etc."
-                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                      className="w-full px-3 py-2 border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                     />
                   </div>
                 </div>
@@ -499,7 +550,7 @@ export default function CheckoutPage() {
               onChange={(e) => setOrderNotes(e.target.value)}
               placeholder="Special instructions for your order..."
               rows={3}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
+              className="w-full px-3 py-2 border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
             />
           </div>
         </div>
