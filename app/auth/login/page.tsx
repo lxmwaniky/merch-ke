@@ -1,16 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { login, migrateCart } from "@/lib/api/endpoints";
 import { useCart } from "@/contexts/cart-context";
+import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/components/ui/toast";
 import { Eye, EyeOff, LogIn } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
   const { refreshCart } = useCart();
+  const { login: authLogin, user, loading: authLoading } = useAuth();
   const { showToast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -20,12 +22,23 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.push("/");
+    }
+  }, [user, authLoading, router]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
       const response = await login(formData);
+      
+      // Update the global auth state
+      authLogin(response.user);
+      
       showToast(`Welcome back, ${response.user.first_name}!`);
 
       // Migrate guest cart if exists
@@ -55,6 +68,18 @@ export default function LoginPage() {
       [e.target.name]: e.target.value,
     }));
   };
+
+  // Show loading while checking auth status
+  if (authLoading) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12">

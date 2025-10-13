@@ -1,15 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingCart, User, Menu, Moon, Sun } from "lucide-react";
+import { ShoppingCart, User, Menu, Moon, Sun, LogOut } from "lucide-react";
 import { useState } from "react";
 import { useTheme } from "@/components/theme-provider";
 import { useCart } from "@/contexts/cart-context";
+import { useAuth } from "@/contexts/auth-context";
 
 export default function Header() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const { theme, setTheme } = useTheme();
     const { cartCount } = useCart();
+    const { user, logout } = useAuth();
 
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -67,13 +69,31 @@ export default function Header() {
                         </Link>
 
                         {/* User Menu */}
-                        <Link
-                            href="/auth/login"
-                            className="hidden md:flex items-center space-x-2 p-2 hover:bg-accent rounded-md transition-colors"
-                        >
-                            <User className="h-5 w-5" />
-                            <span className="text-sm font-medium">Login</span>
-                        </Link>
+                        {user ? (
+                            <div className="hidden md:flex items-center space-x-2">
+                                <div className="flex items-center space-x-2 p-2 rounded-md">
+                                    <User className="h-5 w-5" />
+                                    <span className="text-sm font-medium">
+                                        {user.first_name}
+                                    </span>
+                                </div>
+                                <button
+                                    onClick={logout}
+                                    className="flex items-center space-x-2 p-2 hover:bg-accent rounded-md transition-colors text-sm font-medium"
+                                >
+                                    <LogOut className="h-4 w-4" />
+                                    <span>Logout</span>
+                                </button>
+                            </div>
+                        ) : (
+                            <Link
+                                href="/auth/login"
+                                className="hidden md:flex items-center space-x-2 p-2 hover:bg-accent rounded-md transition-colors"
+                            >
+                                <User className="h-5 w-5" />
+                                <span className="text-sm font-medium">Login</span>
+                            </Link>
+                        )}
 
                         {/* Mobile Menu Button */}
                         <button
@@ -103,13 +123,34 @@ export default function Header() {
                             >
                                 Categories
                             </Link>
-                            <Link
-                                href="/auth/login"
-                                className="text-sm font-medium transition-colors hover:text-primary"
-                                onClick={() => setMobileMenuOpen(false)}
-                            >
-                                Login
-                            </Link>
+                            {user ? (
+                                <div className="space-y-4">
+                                    <div className="flex items-center space-x-2">
+                                        <User className="h-5 w-5" />
+                                        <span className="text-sm font-medium">
+                                            {user.first_name}
+                                        </span>
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            logout();
+                                            setMobileMenuOpen(false);
+                                        }}
+                                        className="flex items-center space-x-2 text-sm font-medium transition-colors hover:text-primary"
+                                    >
+                                        <LogOut className="h-4 w-4" />
+                                        <span>Logout</span>
+                                    </button>
+                                </div>
+                            ) : (
+                                <Link
+                                    href="/auth/login"
+                                    className="text-sm font-medium transition-colors hover:text-primary"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                >
+                                    Login
+                                </Link>
+                            )}
                         </nav>
                     </div>
                 )}

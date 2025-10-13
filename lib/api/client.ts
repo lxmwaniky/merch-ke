@@ -45,7 +45,11 @@ class ApiClient {
           // Unauthorized - clear token and redirect to login
           this.clearToken();
           if (typeof window !== "undefined") {
-            window.location.href = "/auth/login";
+            // Only redirect if not already on auth pages
+            const currentPath = window.location.pathname;
+            if (!currentPath.startsWith("/auth/")) {
+              window.location.href = "/auth/login";
+            }
           }
         }
         return Promise.reject(error);
