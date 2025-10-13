@@ -44,19 +44,35 @@ export default function LoginPage() {
       // Migrate guest cart if exists
       try {
         await migrateCart();
-      } catch (err) {
+        console.log("✅ Guest cart migrated successfully");
+      } catch (err: any) {
         // Cart migration is optional, don't fail login
-        console.log("No guest cart to migrate");
+        console.log("⚠️ Cart migration failed (this is optional):", err.response?.status);
       }
 
       await refreshCart();
       router.push("/");
     } catch (err: any) {
       console.error("Login failed:", err);
-      showToast(
-        err.response?.data?.error || "Invalid email or password",
-        "error"
-      );
+      console.error("Error details:", {
+        status: err.response?.status,
+        statusText: err.response?.statusText,
+        data: err.response?.data,
+        message: err.message,
+        code: err.code
+      });
+      
+      let errorMessage = "Login failed. Please try again.";
+      
+      if (err.code === 'ECONNREFUSED' || err.code === 'ERR_NETWORK') {
+        errorMessage = "Cannot connect to server. Is your backend running on localhost:8080?";
+      } else if (err.response?.status === 401) {
+        errorMessage = err.response?.data?.error || "Invalid email or password";
+      } else if (err.response?.data?.error) {
+        errorMessage = err.response.data.error;
+      }
+      
+      showToast(errorMessage, "error");
     } finally {
       setLoading(false);
     }

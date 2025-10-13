@@ -42,14 +42,25 @@ class ApiClient {
       (response) => response,
       (error: AxiosError) => {
         if (error.response?.status === 401) {
-          // Unauthorized - clear token and redirect to login
-          this.clearToken();
-          if (typeof window !== "undefined") {
-            // Only redirect if not already on auth pages
-            const currentPath = window.location.pathname;
-            if (!currentPath.startsWith("/auth/")) {
-              window.location.href = "/auth/login";
+          const requestUrl = error.config?.url || '';
+          console.log("❌ 401 Error on:", requestUrl);
+          
+          // Only clear token for authentication-related endpoints
+          // Don't clear token for optional operations like cart migration
+          const authEndpoints = ['/api/auth/login', '/api/auth/register', '/api/auth/profile'];
+          const isAuthEndpoint = authEndpoints.some(endpoint => requestUrl.includes(endpoint));
+          
+          if (isAuthEndpoint) {
+            console.log("🗑️ Auth endpoint failed - clearing token and redirecting");
+            this.clearToken();
+            if (typeof window !== "undefined") {
+              const currentPath = window.location.pathname;
+              if (!currentPath.startsWith("/auth/")) {
+                window.location.href = "/auth/login";
+              }
             }
+          } else {
+            console.log("⚠️ Non-auth endpoint failed with 401 - keeping token");
           }
         }
         return Promise.reject(error);

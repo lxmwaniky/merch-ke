@@ -21,6 +21,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshUser = async () => {
     const token = apiClient.getToken();
+    
     if (!token) {
       setUser(null);
       setLoading(false);
@@ -30,8 +31,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const data = await getProfile();
       setUser(data.user);
-    } catch (err) {
-      console.error("Failed to fetch user:", err);
+    } catch (err: any) {
+      console.error("Failed to fetch user profile:", err);
       setUser(null);
       apiClient.clearToken();
     } finally {
@@ -45,6 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = (userData: User) => {
     setUser(userData);
+    setLoading(false);
   };
 
   const logout = () => {
