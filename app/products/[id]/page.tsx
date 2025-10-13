@@ -50,8 +50,6 @@ export default function ProductDetailPage() {
     fetchData();
   }, [productId]);
 
-  const { refreshCart } = useCart();
-
   const handleAddToCart = async () => {
     if (!product) return;
     
