@@ -4,6 +4,8 @@ import "./globals.css";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
 import { ThemeProvider } from "@/components/theme-provider";
+import { CartProvider } from "@/contexts/cart-context";
+import { ToastProvider } from "@/components/ui/toast";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -31,11 +33,15 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={inter.className}>
+      <body className={inter.className} suppressHydrationWarning>
         <ThemeProvider defaultTheme="dark">
-          <Header />
-          <main className="min-h-screen">{children}</main>
-          <Footer />
+          <ToastProvider>
+            <CartProvider>
+              <Header />
+              <main className="min-h-screen">{children}</main>
+              <Footer />
+            </CartProvider>
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>

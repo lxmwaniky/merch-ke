@@ -6,11 +6,15 @@ import Image from "next/image";
 import { getProduct, getProductImages, addToCart } from "@/lib/api/endpoints";
 import type { Product, ProductImage } from "@/types/api";
 import { ShoppingCart, Minus, Plus, ArrowLeft, Star } from "lucide-react";
+import { useCart } from "@/contexts/cart-context";
+import { useToast } from "@/components/ui/toast";
 
 export default function ProductDetailPage() {
   const params = useParams();
   const router = useRouter();
   const productId = Number(params.id);
+  const { refreshCart } = useCart();
+  const { showToast } = useToast();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [images, setImages] = useState<ProductImage[]>([]);
@@ -46,16 +50,19 @@ export default function ProductDetailPage() {
     fetchData();
   }, [productId]);
 
+  const { refreshCart } = useCart();
+
   const handleAddToCart = async () => {
     if (!product) return;
     
     setIsAdding(true);
     try {
       await addToCart({ product_id: product.id, quantity });
-      alert(`Added ${quantity} item(s) to cart!`);
+      await refreshCart();
+      showToast(`Added ${quantity} item(s) to cart!`);
     } catch (err) {
       console.error("Failed to add to cart:", err);
-      alert("Failed to add to cart");
+      showToast("Failed to add to cart", "error");
     } finally {
       setIsAdding(false);
     }

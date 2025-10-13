@@ -4,10 +4,12 @@ import Link from "next/link";
 import { ShoppingCart, User, Menu, Moon, Sun } from "lucide-react";
 import { useState } from "react";
 import { useTheme } from "@/components/theme-provider";
+import { useCart } from "@/contexts/cart-context";
 
 export default function Header() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const { theme, setTheme } = useTheme();
+    const { cartCount } = useCart();
 
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -57,9 +59,11 @@ export default function Header() {
                             className="relative p-2 hover:bg-accent rounded-md transition-colors"
                         >
                             <ShoppingCart className="h-5 w-5" />
-                            <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center">
-                                0
-                            </span>
+                            {cartCount > 0 && (
+                                <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center">
+                                    {cartCount}
+                                </span>
+                            )}
                         </Link>
 
                         {/* User Menu */}

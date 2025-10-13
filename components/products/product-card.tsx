@@ -5,6 +5,8 @@ import type { Product } from "@/types/api";
 import { ShoppingCart, Star } from "lucide-react";
 import { addToCart } from "@/lib/api/endpoints";
 import { useState } from "react";
+import { useCart } from "@/contexts/cart-context";
+import { useToast } from "@/components/ui/toast";
 
 interface ProductCardProps {
   product: Product;
@@ -12,17 +14,19 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const [isAdding, setIsAdding] = useState(false);
+  const { refreshCart } = useCart();
+  const { showToast } = useToast();
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     setIsAdding(true);
     try {
       await addToCart({ product_id: product.id, quantity: 1 });
-      // TODO: Update cart count in header
-      alert("Added to cart!");
+      await refreshCart();
+      showToast("Added to cart!");
     } catch (err) {
       console.error("Failed to add to cart:", err);
-      alert("Failed to add to cart");
+      showToast("Failed to add to cart", "error");
     } finally {
       setIsAdding(false);
     }
