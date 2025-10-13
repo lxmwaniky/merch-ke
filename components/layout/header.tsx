@@ -32,12 +32,6 @@ export default function Header() {
                         >
                             Categories
                         </Link>
-                        <Link
-                            href="/about"
-                            className="text-sm font-medium transition-colors hover:text-primary"
-                        >
-                            About
-                        </Link>
                     </nav>
 
                     {/* Right Side Actions */}
@@ -104,13 +98,6 @@ export default function Header() {
                                 onClick={() => setMobileMenuOpen(false)}
                             >
                                 Categories
-                            </Link>
-                            <Link
-                                href="/about"
-                                className="text-sm font-medium transition-colors hover:text-primary"
-                                onClick={() => setMobileMenuOpen(false)}
-                            >
-                                About
                             </Link>
                             <Link
                                 href="/auth/login"
