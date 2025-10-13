@@ -153,15 +153,10 @@ export default function CheckoutPage() {
       // Prepare the shipping address string for notes
       const addressString = `${selectedAddress.first_name} ${selectedAddress.last_name}, ${selectedAddress.phone}\n${selectedAddress.address_line1}${selectedAddress.address_line2 ? ', ' + selectedAddress.address_line2 : ''}\n${selectedAddress.city}, ${selectedAddress.county} ${selectedAddress.postal_code}`;
       
-      // TEMPORARY: Try minimal order without notes field due to database issues
+      // SIMPLE CHECKOUT - Backend is broken, just send minimal required data
       const orderData = {
-        payment_method: paymentMethod,
-        // notes: orderNotes ? `${addressString}\n\nAdditional Notes: ${orderNotes}` : addressString,
+        payment_method: paymentMethod
       };
-      
-      // Store address info locally for now since backend DB is broken
-      console.warn("⚠️ STORING ADDRESS LOCALLY - Backend DB missing 'notes' column");
-      console.log("Address info:", addressString);
 
       console.log("📦 Sending order request:", JSON.stringify(orderData, null, 2));
       const response = await createOrder(orderData);
