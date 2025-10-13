@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { getProducts, getCategories } from "@/lib/api/endpoints";
 import type { Product, Category } from "@/types/api";
@@ -8,7 +8,7 @@ import ProductCard from "@/components/products/product-card";
 import ProductFilters from "@/components/products/product-filters";
 import { Search } from "lucide-react";
 
-export default function ProductsPage() {
+function ProductsContent() {
   const searchParams = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -148,5 +148,17 @@ export default function ProductsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    }>
+      <ProductsContent />
+    </Suspense>
   );
 }
