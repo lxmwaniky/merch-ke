@@ -120,15 +120,24 @@ export const createOrder = async (data: {
   payment_method: string;
   notes?: string;
 }): Promise<OrderResponse> => {
-  console.log("📦 Creating order with data:", data);
+  console.log("🚀 Making order creation request...");
   try {
     const response = await api.post<OrderResponse>("/api/orders", data);
-    console.log("✅ Order created successfully:", response.data);
+    console.log("✅ SUCCESS! Order created:", response.data);
     return response.data;
   } catch (error: any) {
-    console.error("❌ Order creation failed:", error);
-    console.error("Error response:", error.response?.data);
-    console.error("Error status:", error.response?.status);
+    console.error("💥 BACKEND ISSUE - Order creation failed:");
+    console.error("Request data sent:", JSON.stringify(data, null, 2));
+    console.error("Backend error:", error.response?.data);
+    console.error("Backend status:", error.response?.status);
+    
+    // This proves backend code is broken - it tries to INSERT into missing columns
+    // regardless of what we send in the request
+    if (error.response?.data?.details?.includes('column "notes"')) {
+      console.error("🐛 BACKEND BUG: Backend tries to INSERT into 'notes' column even when we don't send notes!");
+      console.error("🔧 BACKEND TEAM: Fix your INSERT statement in order creation handler");
+    }
+    
     throw error;
   }
 };

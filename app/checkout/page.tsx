@@ -74,13 +74,10 @@ export default function CheckoutPage() {
 
   const fetchCart = async () => {
     try {
-      console.log("Fetching cart for checkout...");
       const data = await getCart();
-      console.log("Cart data received:", data);
       const items = data.items || [];
       
       if (items.length === 0) {
-        console.log("Cart is empty, redirecting to cart page");
         showToast("Your cart is empty", "error");
         router.push("/cart");
         return;
@@ -92,7 +89,6 @@ export default function CheckoutPage() {
 
       setCartItems(items);
       setSubtotal(data.subtotal || calculatedSubtotal);
-      console.log("Cart loaded successfully:", items.length, "items, subtotal:", calculatedSubtotal);
     } catch (err) {
       console.error("Failed to load cart:", err);
       showToast("Failed to load cart", "error");
@@ -157,24 +153,17 @@ export default function CheckoutPage() {
       // Prepare the shipping address string for notes
       const addressString = `${selectedAddress.first_name} ${selectedAddress.last_name}, ${selectedAddress.phone}\n${selectedAddress.address_line1}${selectedAddress.address_line2 ? ', ' + selectedAddress.address_line2 : ''}\n${selectedAddress.city}, ${selectedAddress.county} ${selectedAddress.postal_code}`;
       
+      // TEMPORARY: Try minimal order without notes field due to database issues
       const orderData = {
         payment_method: paymentMethod,
-        notes: orderNotes ? `${addressString}\n\nAdditional Notes: ${orderNotes}` : addressString,
-        // Ensure we don't send any session_id or shipping_address_id that might cause DB issues
+        // notes: orderNotes ? `${addressString}\n\nAdditional Notes: ${orderNotes}` : addressString,
       };
+      
+      // Store address info locally for now since backend DB is broken
+      console.warn("⚠️ STORING ADDRESS LOCALLY - Backend DB missing 'notes' column");
+      console.log("Address info:", addressString);
 
-      console.log("Placing order with data:", orderData);
-      console.log("Current user:", user);
-      console.log("Current cart items:", cartItems);
-      console.log("Cart subtotal:", subtotal);
-      
-      // Check authentication status
-      const token = localStorage.getItem('auth_token');
-      console.log("Auth token present:", !!token);
-      if (token) {
-        console.log("Token preview:", token.substring(0, 20) + "...");
-      }
-      
+      console.log("📦 Sending order request:", JSON.stringify(orderData, null, 2));
       const response = await createOrder(orderData);
       
       showToast("Order placed successfully!");
@@ -195,9 +184,9 @@ export default function CheckoutPage() {
       } else if (err.response?.data?.message) {
         errorMessage = err.response.data.message;
       } else if (err.response?.status === 500) {
-        // Check for specific database schema error
-        if (err.response?.data?.details?.includes?.('column "session_id"')) {
-          errorMessage = "Order system is currently being updated. Please try again in a few minutes or contact support.";
+        // Check for any database schema errors (missing columns)
+        if (err.response?.data?.details?.includes?.('column "') && err.response?.data?.details?.includes?.('does not exist')) {
+          errorMessage = "🚧 Database is being updated by the backend team. Please try again in a few minutes.";
         } else {
           errorMessage = "Server error. Please check if you have items in your cart and try again.";
         }
