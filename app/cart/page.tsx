@@ -5,13 +5,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getCart, updateCartItem, removeFromCart } from "@/lib/api/endpoints";
 import type { CartItem } from "@/types/api";
-import { Minus, Plus, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, User } from "lucide-react";
 import { useCart } from "@/contexts/cart-context";
+import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/components/ui/toast";
 
 export default function CartPage() {
   const router = useRouter();
   const { refreshCart } = useCart();
+  const { user } = useAuth();
   const { showToast } = useToast();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [subtotal, setSubtotal] = useState(0);
@@ -233,13 +235,28 @@ export default function CartPage() {
               <span>KSh {subtotal.toLocaleString()}</span>
             </div>
 
-            <button
-              onClick={() => router.push("/checkout")}
-              className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-md font-medium hover:bg-primary/90 transition-colors"
-            >
-              Proceed to Checkout
-              <ArrowRight className="h-4 w-4" />
-            </button>
+            {user ? (
+              <button
+                onClick={() => router.push("/checkout")}
+                className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-md font-medium hover:bg-primary/90 transition-colors"
+              >
+                Proceed to Checkout
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            ) : (
+              <div className="space-y-3">
+                <Link
+                  href="/auth/login"
+                  className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-md font-medium hover:bg-primary/90 transition-colors"
+                >
+                  <User className="h-4 w-4" />
+                  Login to Checkout
+                </Link>
+                <p className="text-xs text-center text-muted-foreground">
+                  You need to be logged in to complete your purchase
+                </p>
+              </div>
+            )}
 
             <Link
               href="/products"

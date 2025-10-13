@@ -199,15 +199,31 @@ export default function ProductDetailPage() {
             </div>
           </div>
 
-          {/* Add to Cart Button */}
-          <button
-            onClick={handleAddToCart}
-            disabled={isAdding}
-            className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-md font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
-          >
-            <ShoppingCart className="h-5 w-5" />
-            {isAdding ? "Adding..." : "Add to Cart"}
-          </button>
+          {/* Purchase Buttons */}
+          <div className="space-y-3">
+            <button
+              onClick={handleAddToCart}
+              disabled={isAdding}
+              className="w-full flex items-center justify-center gap-2 border border-primary text-primary px-8 py-4 rounded-md font-medium hover:bg-primary/10 transition-colors disabled:opacity-50"
+            >
+              <ShoppingCart className="h-5 w-5" />
+              {isAdding ? "Adding..." : "Add to Cart"}
+            </button>
+            
+            <button
+              onClick={async () => {
+                await handleAddToCart();
+                if (product) {
+                  router.push("/checkout");
+                }
+              }}
+              disabled={isAdding}
+              className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-md font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+            >
+              <ShoppingCart className="h-5 w-5" />
+              {isAdding ? "Adding..." : "Buy Now"}
+            </button>
+          </div>
 
           {/* Product Details */}
           <div className="border rounded-lg p-4 space-y-2 text-sm">
