@@ -4,6 +4,7 @@ import "./globals.css";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
 import { ThemeProvider } from "@/components/theme-provider";
+import { AuthProvider } from "@/contexts/auth-context";
 import { CartProvider } from "@/contexts/cart-context";
 import { ToastProvider } from "@/components/ui/toast";
 
@@ -36,11 +37,13 @@ export default function RootLayout({
       <body className={inter.className} suppressHydrationWarning>
         <ThemeProvider defaultTheme="dark">
           <ToastProvider>
-            <CartProvider>
-              <Header />
-              <main className="min-h-screen">{children}</main>
-              <Footer />
-            </CartProvider>
+            <AuthProvider>
+              <CartProvider>
+                <Header />
+                <main className="min-h-screen">{children}</main>
+                <Footer />
+              </CartProvider>
+            </AuthProvider>
           </ToastProvider>
         </ThemeProvider>
       </body>
