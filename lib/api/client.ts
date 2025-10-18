@@ -18,15 +18,19 @@ class ApiClient {
       (config) => {
         // Add JWT token if available
         const token = this.getToken();
+        console.log("🔑 Request to:", config.url, "| Token:", token ? "EXISTS" : "MISSING");
+        
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
-          }
+          console.log("✅ Added Authorization header");
+        }
 
         // Add session ID for guest users (if no token)
         if (!token) {
           const sessionId = this.getSessionId();
           if (sessionId) {
             config.headers["X-Session-ID"] = sessionId;
+            console.log("✅ Added Session ID header");
           }
         }
 

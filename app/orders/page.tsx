@@ -23,19 +23,24 @@ export default function OrdersPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!authLoading && !user) {
+    if (authLoading) {
+      // Wait for auth to load
+      return;
+    }
+
+    if (!user) {
       // Redirect to login if not authenticated
       window.location.href = "/auth/login";
       return;
     }
 
-    if (user) {
-      fetchOrders();
-    }
+    // Only fetch orders if user is authenticated
+    fetchOrders();
   }, [user, authLoading]);
 
   const fetchOrders = async () => {
     try {
+      setLoading(true);
       setError(null);
       const data = await getOrders();
       setOrders(data.orders || []);
