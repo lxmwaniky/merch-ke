@@ -14,27 +14,23 @@ interface OrderItem {
   size?: string;
   color?: string;
   quantity: number;
-  price: number;
+  unit_price: number;
+  total_price: number;
 }
 
 interface Order {
   id: number;
-  user_id: number;
-  subtotal: number;
-  shipping_cost: number;
-  total: number;
+  user_id?: number;
+  order_number: string;
+  total_amount: number;
   status: string;
   payment_status: string;
   payment_method?: string;
-  shipping_address: string;
+  shipping_address?: string;
+  billing_address?: string;
+  notes?: string;
   created_at: string;
   items: OrderItem[];
-  customer?: {
-    username: string;
-    email: string;
-    first_name?: string;
-    last_name?: string;
-  };
 }
 
 export default function OrderDetailPage() {
@@ -197,9 +193,9 @@ export default function OrderDetailPage() {
                       <p className="text-sm text-muted-foreground">Quantity: {item.quantity}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-medium text-foreground">KES {item.price.toLocaleString()}</p>
+                      <p className="font-medium text-foreground">KSh {item.unit_price?.toLocaleString() || 0}</p>
                       <p className="text-sm text-muted-foreground">
-                        Total: KES {(item.price * item.quantity).toLocaleString()}
+                        Total: KSh {item.total_price?.toLocaleString() || 0}
                       </p>
                     </div>
                   </div>
@@ -208,51 +204,32 @@ export default function OrderDetailPage() {
 
               {/* Order Summary */}
               <div className="mt-6 pt-6 border-t space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Subtotal</span>
-                  <span className="text-foreground">KES {order.subtotal.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Shipping</span>
-                  <span className="text-foreground">KES {order.shipping_cost.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-lg font-bold pt-2 border-t">
+                <div className="flex justify-between text-lg font-bold pt-2">
                   <span className="text-foreground">Total</span>
-                  <span className="text-foreground">KES {order.total.toLocaleString()}</span>
+                  <span className="text-foreground">KSh {order.total_amount?.toLocaleString() || 0}</span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Customer Info */}
-          {order.customer && (
+          {/* Shipping Address */}
+          {order.shipping_address && (
             <div className="bg-card rounded-lg shadow-md border p-6">
               <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center">
-                <User className="h-5 w-5 mr-2" />
-                Customer Information
+                <MapPin className="h-5 w-5 mr-2" />
+                Shipping Address
               </h2>
-              <div className="space-y-2">
-                <p className="text-foreground">
-                  <span className="font-medium">Name:</span>{" "}
-                  {order.customer.first_name && order.customer.last_name
-                    ? `${order.customer.first_name} ${order.customer.last_name}`
-                    : order.customer.username}
-                </p>
-                <p className="text-foreground">
-                  <span className="font-medium">Email:</span> {order.customer.email}
-                </p>
-              </div>
+              <p className="text-foreground whitespace-pre-line">{order.shipping_address}</p>
             </div>
           )}
 
-          {/* Shipping Address */}
-          <div className="bg-card rounded-lg shadow-md border p-6">
-            <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center">
-              <MapPin className="h-5 w-5 mr-2" />
-              Shipping Address
-            </h2>
-            <p className="text-foreground whitespace-pre-line">{order.shipping_address}</p>
-          </div>
+          {/* Notes */}
+          {order.notes && (
+            <div className="bg-card rounded-lg shadow-md border p-6">
+              <h2 className="text-lg font-semibold text-foreground mb-4">Order Notes</h2>
+              <p className="text-foreground whitespace-pre-line">{order.notes}</p>
+            </div>
+          )}
 
           {/* Payment Info */}
           <div className="bg-card rounded-lg shadow-md border p-6">
