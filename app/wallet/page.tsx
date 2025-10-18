@@ -39,9 +39,10 @@ export default function WalletPage() {
 
   const fetchWalletData = async () => {
     try {
+      const api = apiClient.getInstance();
       const [balanceRes, transactionsRes] = await Promise.all([
-        apiClient.get("/api/wallet/balance"),
-        apiClient.get("/api/wallet/transactions"),
+        api.get("/api/wallet/balance"),
+        api.get("/api/wallet/transactions"),
       ]);
       setBalance(balanceRes.data.balance);
       setTransactions(transactionsRes.data.transactions || []);
@@ -55,7 +56,8 @@ export default function WalletPage() {
   const addDemoTokens = async () => {
     setAddingTokens(true);
     try {
-      const response = await apiClient.post("/api/wallet/add-tokens", {
+      const api = apiClient.getInstance();
+      const response = await api.post("/api/wallet/add-tokens", {
         amount: 1000,
       });
       setBalance(response.data.balance);

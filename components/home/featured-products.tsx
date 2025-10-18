@@ -14,13 +14,14 @@ export default function FeaturedProducts() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await api.get("/api/products", { params: { featured: true, limit: 6 } });
-      setProducts(response.data.products || []);
-    } catch (err) {
-      // Error loading featured products
-    } finally {
-      setLoading(false);
-    }
+        const response = await getProducts();
+        const featured = response.products.filter(p => p.is_featured).slice(0, 6);
+        setProducts(featured);
+      } catch (err) {
+        setError("Failed to load featured products");
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchProducts();

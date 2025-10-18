@@ -13,7 +13,8 @@ export function WalletWidget() {
 
   const fetchBalance = async () => {
     try {
-      const response = await apiClient.get("/api/wallet/balance");
+      const api = apiClient.getInstance();
+      const response = await api.get("/api/wallet/balance");
       setBalance(response.data.balance);
     } catch (err) {
     } finally {
@@ -28,7 +29,8 @@ export function WalletWidget() {
   const addDemoTokens = async () => {
     setAddingTokens(true);
     try {
-      const response = await apiClient.post("/api/wallet/add-tokens", {
+      const api = apiClient.getInstance();
+      const response = await api.post("/api/wallet/add-tokens", {
         amount: 1000,
       });
       setBalance(response.data.balance);

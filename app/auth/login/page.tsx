@@ -51,13 +51,6 @@ export default function LoginPage() {
       await refreshCart();
       router.push("/");
     } catch (err: any) {
-        status: err.response?.status,
-        statusText: err.response?.statusText,
-        data: err.response?.data,
-        message: err.message,
-        code: err.code
-      });
-      
       let errorMessage = "Login failed. Please try again.";
       
       if (err.code === 'ECONNREFUSED' || err.code === 'ERR_NETWORK') {
