@@ -43,9 +43,13 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(true);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
+  // Guest checkout
+  const [isGuest, setIsGuest] = useState(false);
+  const [guestEmail, setGuestEmail] = useState("");
+
   // Checkout form state
   const [selectedAddress, setSelectedAddress] = useState<ShippingAddress | null>(null);
-  const [isAddingAddress, setIsAddingAddress] = useState(false);
+  const [isAddingAddress, setIsAddingAddress] = useState(true); // Start with form open for guests
   const [paymentMethod, setPaymentMethod] = useState<"mpesa" | "card" | "cod">("mpesa");
   const [orderNotes, setOrderNotes] = useState("");
 
@@ -62,18 +66,46 @@ export default function CheckoutPage() {
   });
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      router.push("/auth/login");
-      return;
-    }
-
-    if (user) {
+    // Allow both logged-in users and guests
+    if (!authLoading) {
+      if (!user) {
+        setIsGuest(true);
+      }
       fetchCart();
     }
   }, [user, authLoading]);
 
   const fetchCart = async () => {
     try {
+      // For guest users, get cart from localStorage
+      if (isGuest || !user) {
+        const localCart = localStorage.getItem('guest_cart');
+        if (!localCart) {
+          showToast("Your cart is empty", "error");
+          router.push("/cart");
+          return;
+        }
+        
+        const guestCartData = JSON.parse(localCart);
+        const items = guestCartData.items || [];
+        
+        if (items.length === 0) {
+          showToast("Your cart is empty", "error");
+          router.push("/cart");
+          return;
+        }
+
+        const calculatedSubtotal = items.reduce((sum: number, item: CartItem) => {
+          return sum + (item.subtotal || item.price * item.quantity);
+        }, 0);
+
+        setCartItems(items);
+        setSubtotal(calculatedSubtotal);
+        setLoading(false);
+        return;
+      }
+
+      // For logged-in users, fetch from API
       const data = await getCart();
       const items = data.items || [];
       
@@ -103,6 +135,17 @@ export default function CheckoutPage() {
   };
 
   const handleSaveAddress = () => {
+    // Validate guest email if user is not logged in
+    if (isGuest && !guestEmail) {
+      showToast("Please provide your email address", "error");
+      return;
+    }
+
+    if (isGuest && !guestEmail.includes('@')) {
+      showToast("Please provide a valid email address", "error");
+      return;
+    }
+
     // Validate required fields
     const requiredFields = [
       "first_name",
@@ -131,6 +174,12 @@ export default function CheckoutPage() {
       return;
     }
 
+    // Validate guest email
+    if (isGuest && !guestEmail) {
+      showToast("Please provide your email address", "error");
+      return;
+    }
+
     if (!cartItems || cartItems.length === 0) {
       showToast("Your cart is empty. Please add items before placing an order.", "error");
       return;
@@ -141,18 +190,39 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (!user) {
-      showToast("Please log in to place an order.", "error");
-      router.push('/auth/login');
-      return;
-    }
-
     setIsPlacingOrder(true);
     
     try {
       // Prepare the shipping address string for notes
       const addressString = `${selectedAddress.first_name} ${selectedAddress.last_name}, ${selectedAddress.phone}\n${selectedAddress.address_line1}${selectedAddress.address_line2 ? ', ' + selectedAddress.address_line2 : ''}\n${selectedAddress.city}, ${selectedAddress.county} ${selectedAddress.postal_code}`;
       
+      if (isGuest) {
+        // For guest checkout - show success and store order locally
+        showToast("Order placed successfully! (Guest Mode)");
+        
+        // Store guest order locally
+        const guestOrder = {
+          id: Date.now(),
+          order_number: `GUEST-${Date.now()}`,
+          email: guestEmail,
+          shipping_address: selectedAddress,
+          items: cartItems,
+          subtotal: subtotal,
+          payment_method: paymentMethod,
+          notes: orderNotes,
+          created_at: new Date().toISOString(),
+          status: 'pending'
+        };
+        
+        localStorage.setItem('guest_order', JSON.stringify(guestOrder));
+        localStorage.removeItem('guest_cart'); // Clear guest cart
+        
+        // Redirect to success page
+        router.push(`/checkout/success?order=${guestOrder.id}&guest=true&success=true`);
+        return;
+      }
+
+      // For logged-in users - call API
       // SIMPLE CHECKOUT - Backend is broken, just send minimal required data
       const orderData = {
         payment_method: paymentMethod
@@ -227,6 +297,37 @@ export default function CheckoutPage() {
           <ArrowLeft className="h-4 w-4" />
           Back to Cart
         </button>
+        
+        {/* Guest Checkout Banner */}
+        {isGuest && (
+          <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <div className="flex items-start gap-3">
+              <ShoppingBag className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+              <div>
+                <p className="font-medium text-blue-900 dark:text-blue-100">
+                  Guest Checkout
+                </p>
+                <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                  You're checking out as a guest. Want to save your order history?{" "}
+                  <button
+                    onClick={() => router.push("/auth/register")}
+                    className="underline hover:text-blue-900 dark:hover:text-blue-100"
+                  >
+                    Create an account
+                  </button>
+                  {" "}or{" "}
+                  <button
+                    onClick={() => router.push("/auth/login")}
+                    className="underline hover:text-blue-900 dark:hover:text-blue-100"
+                  >
+                    log in
+                  </button>
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <h1 className="text-3xl font-bold">Checkout</h1>
         <p className="text-muted-foreground">Complete your purchase</p>
       </div>
@@ -316,6 +417,27 @@ export default function CheckoutPage() {
                 <h3 className="font-medium mb-4">
                   {selectedAddress ? "Edit" : "Add"} Shipping Address
                 </h3>
+                
+                {/* Guest Email Field */}
+                {isGuest && (
+                  <div className="mb-6 p-4 bg-muted/50 border rounded-lg">
+                    <label className="block text-sm font-medium mb-2">
+                      Email Address * (for order confirmation)
+                    </label>
+                    <input
+                      type="email"
+                      value={guestEmail}
+                      onChange={(e) => setGuestEmail(e.target.value)}
+                      placeholder="your.email@example.com"
+                      className="w-full px-3 py-2 border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      We'll send your order confirmation to this email
+                    </p>
+                  </div>
+                )}
+                
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1">
