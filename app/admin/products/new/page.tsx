@@ -1,25 +1,51 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Save } from "lucide-react";
-import { adminCreateProduct } from "@/lib/api/endpoints";
+import { adminCreateProduct, adminGetCategories } from "@/lib/api/endpoints";
 import { useToast } from "@/components/ui/toast";
 
 export default function NewProductPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
   const { showToast } = useToast();
+  const [categories, setCategories] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
     description: "",
-    category_id: 1,
+    short_description: "",
+    category_id: 0,
     base_price: 0,
+    image_url: "",
     is_active: true,
     is_featured: false,
   });
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      setCategoriesLoading(true);
+      const data = await adminGetCategories();
+      const cats = data.categories || [];
+      setCategories(cats);
+      // Set first category as default if available
+      if (cats.length > 0 && formData.category_id === 0) {
+        setFormData(prev => ({ ...prev, category_id: cats[0].id }));
+      }
+    } catch (err) {
+      console.error("Failed to load categories:", err);
+      showToast("Failed to load categories", "error");
+    } finally {
+      setCategoriesLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,6 +137,37 @@ export default function NewProductPage() {
           />
         </div>
 
+        {/* Short Description */}
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-2">
+            Short Description
+          </label>
+          <textarea
+            value={formData.short_description}
+            onChange={(e) => setFormData({ ...formData, short_description: e.target.value })}
+            rows={2}
+            className="w-full px-4 py-2 border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent"
+            placeholder="Brief product summary..."
+          />
+        </div>
+
+        {/* Image URL */}
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-2">
+            Image URL
+          </label>
+          <input
+            type="url"
+            value={formData.image_url}
+            onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+            className="w-full px-4 py-2 border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent"
+            placeholder="https://example.com/image.jpg"
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            Enter a full URL to the product image
+          </p>
+        </div>
+
         {/* Price & Category Row */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Base Price */}
@@ -137,18 +194,36 @@ export default function NewProductPage() {
             <label className="block text-sm font-medium text-foreground mb-2">
               Category *
             </label>
-            <select
-              required
-              value={formData.category_id}
-              onChange={(e) =>
-                setFormData({ ...formData, category_id: parseInt(e.target.value) })
-              }
-              className="w-full px-4 py-2 border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent"
-            >
-              <option value={1}>Apparel</option>
-              <option value={2}>Accessories</option>
-              <option value={3}>Tech</option>
-            </select>
+            {categoriesLoading ? (
+              <div className="w-full px-4 py-2 border rounded-lg bg-background text-muted-foreground">
+                Loading categories...
+              </div>
+            ) : categories.length === 0 ? (
+              <div>
+                <div className="w-full px-4 py-2 border rounded-lg bg-background text-muted-foreground">
+                  No categories available
+                </div>
+                <p className="text-xs text-red-500 mt-1">
+                  Please create a category first
+                </p>
+              </div>
+            ) : (
+              <select
+                required
+                value={formData.category_id}
+                onChange={(e) =>
+                  setFormData({ ...formData, category_id: parseInt(e.target.value) })
+                }
+                className="w-full px-4 py-2 border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent"
+              >
+                <option value="">Select a category</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
         </div>
 
