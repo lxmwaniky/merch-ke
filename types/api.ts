@@ -24,8 +24,10 @@ export interface Product {
   name: string;
   slug: string;
   description: string;
+  short_description?: string;
   category_id: number;
   base_price: number;
+  image_url?: string;
   is_active: boolean;
   is_featured: boolean;
   created_at: string;
@@ -55,10 +57,17 @@ export interface CategoriesResponse {
 export interface ProductImage {
   id: number;
   product_id: number;
+  variant_id?: number | null;
   image_url: string;
-  alt_text: string;
+  image_path: string;
+  image_type: string;
+  alt_text?: string | null;
   display_order: number;
+  file_size?: number | null;
+  width?: number | null;
+  height?: number | null;
   is_primary: boolean;
+  created_at: string;
 }
 
 export interface ProductImagesResponse {

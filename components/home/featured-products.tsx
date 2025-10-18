@@ -74,9 +74,21 @@ export default function FeaturedProducts() {
               className="group"
             >
               <div className="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
-                {/* Product Image Placeholder */}
-                <div className="aspect-square bg-muted flex items-center justify-center">
-                  <span className="text-4xl">📦</span>
+                {/* Product Image */}
+                <div className="aspect-square bg-muted flex items-center justify-center overflow-hidden">
+                  {product.image_url ? (
+                    <img
+                      src={product.image_url}
+                      alt={product.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.parentElement!.innerHTML = '<span class="text-4xl">📦</span>';
+                      }}
+                    />
+                  ) : (
+                    <span className="text-4xl">📦</span>
+                  )}
                 </div>
 
                 {/* Product Info */}
