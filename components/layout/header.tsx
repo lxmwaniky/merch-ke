@@ -44,6 +44,14 @@ export default function Header() {
                                 My Orders
                             </Link>
                         )}
+                        {user && user.role === "admin" && (
+                            <Link
+                                href="/admin"
+                                className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                            >
+                                Admin Dashboard
+                            </Link>
+                        )}
                     </nav>
 
                     {/* Right Side Actions */}

@@ -157,3 +157,76 @@ export const getPoints = async (): Promise<PointsResponse> => {
   const response = await api.get<PointsResponse>("/api/points");
   return response.data;
 };
+
+// Admin - Products
+export const adminGetProducts = async (): Promise<ProductsResponse> => {
+  const response = await api.get<ProductsResponse>("/api/admin/products");
+  return response.data;
+};
+
+export const adminCreateProduct = async (data: {
+  name: string;
+  slug: string;
+  description?: string;
+  category_id: number;
+  base_price: number;
+  is_active?: boolean;
+  is_featured?: boolean;
+}) => {
+  const response = await api.post("/api/admin/products", data);
+  return response.data;
+};
+
+export const adminUpdateProduct = async (id: number, data: any) => {
+  const response = await api.put(`/api/admin/products/${id}`, data);
+  return response.data;
+};
+
+export const adminDeleteProduct = async (id: number) => {
+  const response = await api.delete(`/api/admin/products/${id}`);
+  return response.data;
+};
+
+// Admin - Categories
+export const adminGetCategories = async (): Promise<CategoriesResponse> => {
+  const response = await api.get<CategoriesResponse>("/api/admin/categories");
+  return response.data;
+};
+
+export const adminCreateCategory = async (data: {
+  name: string;
+  slug: string;
+  description?: string;
+  parent_id?: number;
+}) => {
+  const response = await api.post("/api/admin/categories", data);
+  return response.data;
+};
+
+export const adminUpdateCategory = async (id: number, data: any) => {
+  const response = await api.put(`/api/admin/categories/${id}`, data);
+  return response.data;
+};
+
+export const adminDeleteCategory = async (id: number) => {
+  const response = await api.delete(`/api/admin/categories/${id}`);
+  return response.data;
+};
+
+// Admin - Orders
+export const adminGetOrders = async () => {
+  const response = await api.get("/api/admin/orders");
+  return response.data;
+};
+
+export const adminUpdateOrderStatus = async (
+  id: number,
+  data: {
+    status?: string;
+    payment_status?: string;
+    payment_method?: string;
+  }
+) => {
+  const response = await api.put(`/api/admin/orders/${id}/status`, data);
+  return response.data;
+};
