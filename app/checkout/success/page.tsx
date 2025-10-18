@@ -26,23 +26,46 @@ function CheckoutSuccessContent() {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isGuest, setIsGuest] = useState(false);
 
   const orderId = searchParams.get("order");
   const isSuccess = searchParams.get("success") === "true";
+  const guestMode = searchParams.get("guest") === "true";
 
   useEffect(() => {
-    if (!authLoading && !user) {
+    setIsGuest(guestMode);
+    
+    // For guests, try to load from localStorage first
+    if (guestMode) {
+      loadGuestOrder();
+    } else if (!authLoading && !user) {
+      // Authenticated users only - redirect to login if not logged in
       router.push("/auth/login");
       return;
-    }
-
-    if (user && orderId) {
+    } else if (user && orderId) {
       fetchOrder();
     } else if (user && !orderId) {
       setError("No order ID provided");
       setLoading(false);
     }
-  }, [user, authLoading, orderId]);
+  }, [user, authLoading, orderId, guestMode]);
+
+  const loadGuestOrder = () => {
+    try {
+      const storedOrder = localStorage.getItem('last_order');
+      if (storedOrder) {
+        const orderData = JSON.parse(storedOrder);
+        setOrder(orderData);
+      } else {
+        setError("Order details not found");
+      }
+    } catch (err) {
+      console.error("Failed to load guest order:", err);
+      setError("Failed to load order details");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchOrder = async () => {
     try {
@@ -136,13 +159,31 @@ function CheckoutSuccessContent() {
           </div>
           <h1 className="text-4xl font-bold mb-4">Order Placed Successfully!</h1>
           <p className="text-xl text-muted-foreground mb-6">
-            Thank you for your purchase, {user?.first_name}!
+            Thank you for your purchase{user?.first_name ? `, ${user.first_name}` : ''}!
           </p>
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-lg">
             <span className="text-green-800 font-medium">
               Order #{order.order_number}
             </span>
           </div>
+          
+          {/* Guest User Notice */}
+          {isGuest && (
+            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg max-w-2xl mx-auto">
+              <p className="text-blue-900 font-medium mb-2">
+                📧 Check your email for order confirmation
+              </p>
+              <p className="text-sm text-blue-700">
+                We've sent the order details to <strong>{(order as any).email}</strong>
+              </p>
+              <p className="text-sm text-blue-600 mt-2">
+                Want to track your orders easily?{" "}
+                <Link href="/auth/register" className="underline font-medium">
+                  Create an account
+                </Link>
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
@@ -170,8 +211,31 @@ function CheckoutSuccessContent() {
                       <p className="font-medium">Payment Method</p>
                       <p className="text-muted-foreground capitalize">
                         {order.payment_method === "cod" ? "Cash on Delivery" : 
-                         order.payment_method === "mpesa" ? "M-Pesa" : "Card Payment"}
+                         order.payment_method === "mpesa" ? "M-Pesa" : 
+                         order.payment_method === "card" ? "Card Payment" : 
+                         order.payment_method || "Not specified"}
                       </p>
+                    </div>
+                  </div>
+                  
+                  {/* Payment Status Simulation */}
+                  <div className="flex items-center gap-3">
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                    <div>
+                      <p className="font-medium">Payment Status</p>
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                        {(order as any).payment_status === "paid" ? "Paid" : "Pending"}
+                      </span>
+                      {order.payment_method === "mpesa" && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Check your phone for M-Pesa prompt
+                        </p>
+                      )}
+                      {order.payment_method === "cod" && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Pay when you receive your order
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -203,19 +267,19 @@ function CheckoutSuccessContent() {
               <div className="border-t pt-6">
                 <h3 className="font-semibold mb-4">Items Ordered</h3>
                 <div className="space-y-4">
-                  {order.items?.map((item) => (
-                    <div key={item.id} className="flex items-center gap-4 p-4 border rounded-md">
+                  {(order.items && order.items.length > 0 ? order.items : (order as any).items || []).map((item: any, index: number) => (
+                    <div key={item.id || index} className="flex items-center gap-4 p-4 border rounded-md">
                       <div className="w-16 h-16 bg-muted rounded-md flex items-center justify-center">
                         <Package className="h-8 w-8 text-muted-foreground" />
                       </div>
                       <div className="flex-1">
                         <h4 className="font-medium">{item.product_name}</h4>
-                        <p className="text-muted-foreground">
-                          Quantity: {item.quantity} × {formatCurrency(item.price)}
+                        <p className="text-sm text-muted-foreground">
+                          Quantity: {item.quantity} × {formatCurrency(item.price || item.unit_price)}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold">{formatCurrency(item.subtotal)}</p>
+                        <p className="font-semibold">{formatCurrency(item.subtotal || item.total_price || (item.price * item.quantity))}</p>
                       </div>
                     </div>
                   ))}
@@ -327,20 +391,33 @@ function CheckoutSuccessContent() {
 
             {/* Actions */}
             <div className="space-y-3">
-              <Link
-                href={`/orders/${order.id}`}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 border rounded-md hover:bg-accent transition-colors"
-              >
-                <Package className="h-4 w-4" />
-                View Order Details
-              </Link>
+              {!isGuest && (
+                <>
+                  <Link
+                    href={`/orders/${order.id}`}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 border rounded-md hover:bg-accent transition-colors"
+                  >
+                    <Package className="h-4 w-4" />
+                    View Order Details
+                  </Link>
+                  
+                  <Link
+                    href="/orders"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 border rounded-md hover:bg-accent transition-colors"
+                  >
+                    View All Orders
+                  </Link>
+                </>
+              )}
               
-              <Link
-                href="/orders"
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 border rounded-md hover:bg-accent transition-colors"
-              >
-                View All Orders
-              </Link>
+              {isGuest && (
+                <Link
+                  href="/auth/register"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-primary text-primary rounded-md hover:bg-primary/5 transition-colors"
+                >
+                  Create Account to Track Orders
+                </Link>
+              )}
               
               <Link
                 href="/products"

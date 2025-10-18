@@ -47,6 +47,11 @@ export default function CheckoutPage() {
   const [isGuest, setIsGuest] = useState(false);
   const [guestEmail, setGuestEmail] = useState("");
 
+  // Payment simulation
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
+  const [mpesaPhone, setMpesaPhone] = useState("");
+
   // Checkout form state
   const [selectedAddress, setSelectedAddress] = useState<ShippingAddress | null>(null);
   const [isAddingAddress, setIsAddingAddress] = useState(true); // Start with form open for guests
@@ -77,35 +82,7 @@ export default function CheckoutPage() {
 
   const fetchCart = async () => {
     try {
-      // For guest users, get cart from localStorage
-      if (isGuest || !user) {
-        const localCart = localStorage.getItem('guest_cart');
-        if (!localCart) {
-          showToast("Your cart is empty", "error");
-          router.push("/cart");
-          return;
-        }
-        
-        const guestCartData = JSON.parse(localCart);
-        const items = guestCartData.items || [];
-        
-        if (items.length === 0) {
-          showToast("Your cart is empty", "error");
-          router.push("/cart");
-          return;
-        }
-
-        const calculatedSubtotal = items.reduce((sum: number, item: CartItem) => {
-          return sum + (item.subtotal || item.price * item.quantity);
-        }, 0);
-
-        setCartItems(items);
-        setSubtotal(calculatedSubtotal);
-        setLoading(false);
-        return;
-      }
-
-      // For logged-in users, fetch from API
+      // Try to fetch cart from API (works for both guests and logged-in users via cookies)
       const data = await getCart();
       const items = data.items || [];
       
@@ -190,52 +167,76 @@ export default function CheckoutPage() {
       return;
     }
 
+    // Show payment modal for M-Pesa and Card, skip for COD
+    if (paymentMethod === "mpesa" || paymentMethod === "card") {
+      setShowPaymentModal(true);
+      return;
+    }
+
+    // For COD, proceed directly
+    await processOrder();
+  };
+
+  const handlePaymentSimulation = async () => {
+    if (paymentMethod === "mpesa" && !mpesaPhone) {
+      showToast("Please enter your M-Pesa phone number", "error");
+      return;
+    }
+
+    setPaymentProcessing(true);
+
+    // Simulate payment processing delay
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    setPaymentProcessing(false);
+    setShowPaymentModal(false);
+    
+    showToast(`${paymentMethod === "mpesa" ? "M-Pesa" : "Card"} payment simulated successfully!`);
+    
+    // Proceed with order
+    await processOrder();
+  };
+
+  const processOrder = async () => {
+    if (!selectedAddress) return; // Already validated
+    
     setIsPlacingOrder(true);
     
     try {
-      // Prepare the shipping address string for notes
+      // Prepare the shipping address string for backend
       const addressString = `${selectedAddress.first_name} ${selectedAddress.last_name}, ${selectedAddress.phone}\n${selectedAddress.address_line1}${selectedAddress.address_line2 ? ', ' + selectedAddress.address_line2 : ''}\n${selectedAddress.city}, ${selectedAddress.county} ${selectedAddress.postal_code}`;
       
-      if (isGuest) {
-        // For guest checkout - show success and store order locally
-        showToast("Order placed successfully! (Guest Mode)");
-        
-        // Store guest order locally
-        const guestOrder = {
-          id: Date.now(),
-          order_number: `GUEST-${Date.now()}`,
-          email: guestEmail,
-          shipping_address: selectedAddress,
-          items: cartItems,
-          subtotal: subtotal,
-          payment_method: paymentMethod,
-          notes: orderNotes,
-          created_at: new Date().toISOString(),
-          status: 'pending'
-        };
-        
-        localStorage.setItem('guest_order', JSON.stringify(guestOrder));
-        localStorage.removeItem('guest_cart'); // Clear guest cart
-        
-        // Redirect to success page
-        router.push(`/checkout/success?order=${guestOrder.id}&guest=true&success=true`);
-        return;
-      }
-
-      // For logged-in users - call API
-      // SIMPLE CHECKOUT - Backend is broken, just send minimal required data
+      // Prepare order data for API (works for both guest and logged-in users)
       const orderData = {
-        payment_method: paymentMethod
+        payment_method: paymentMethod,
+        shipping_address: addressString,
+        billing_address: addressString,
+        notes: orderNotes || `Guest Email: ${isGuest ? guestEmail : user?.email}`
       };
 
       console.log("📦 Sending order request:", JSON.stringify(orderData, null, 2));
       const response = await createOrder(orderData);
       
+      // Store the order details for the success page
+      const orderDetails = {
+        ...response.order,
+        email: isGuest ? guestEmail : user?.email,
+        shipping_address_details: selectedAddress,
+        items: cartItems // Include cart items for success page
+      };
+      
+      // Store in localStorage for success page access
+      localStorage.setItem('last_order', JSON.stringify(orderDetails));
+      
       showToast("Order placed successfully!");
       await refreshCart();
       
-      // Redirect to order confirmation
-      router.push(`/checkout/success?order=${response.order.id}&success=true`);
+      // Redirect to order confirmation with guest flag if applicable
+      const successUrl = isGuest 
+        ? `/checkout/success?order=${response.order.id}&guest=true&success=true`
+        : `/checkout/success?order=${response.order.id}&success=true`;
+      
+      router.push(successUrl);
       
     } catch (err: any) {
       console.error("Failed to place order:", err);
@@ -397,19 +398,7 @@ export default function CheckoutPage() {
                   Add New Address
                 </button>
               </div>
-            ) : (
-              <div className="text-center py-8">
-                <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground mb-4">No shipping address selected</p>
-                <button
-                  onClick={() => setIsAddingAddress(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors mx-auto"
-                >
-                  <Plus className="h-4 w-4" />
-                  Add Shipping Address
-                </button>
-              </div>
-            )}
+            ) : null}
 
             {/* Address Form */}
             {isAddingAddress && (
@@ -725,6 +714,146 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
+
+      {/* Payment Simulation Modal */}
+      {showPaymentModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-background border rounded-lg shadow-lg max-w-md w-full p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-semibold">
+                {paymentMethod === "mpesa" ? "M-Pesa Payment" : "Card Payment"}
+              </h3>
+              <button
+                onClick={() => setShowPaymentModal(false)}
+                className="text-muted-foreground hover:text-foreground"
+                disabled={paymentProcessing}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {paymentMethod === "mpesa" ? (
+                <>
+                  <div className="p-4 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center text-lg font-bold">
+                        M
+                      </div>
+                      <div>
+                        <p className="font-semibold text-green-900 dark:text-green-100">M-Pesa Payment</p>
+                        <p className="text-sm text-green-700 dark:text-green-300">Amount: {formatCurrency(total)}</p>
+                      </div>
+                    </div>
+                    <p className="text-sm text-green-800 dark:text-green-200">
+                      Enter your M-Pesa phone number to receive a payment prompt
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      M-Pesa Phone Number *
+                    </label>
+                    <input
+                      type="tel"
+                      value={mpesaPhone}
+                      onChange={(e) => setMpesaPhone(e.target.value)}
+                      placeholder="07XX XXX XXX"
+                      className="w-full px-3 py-2 border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                      disabled={paymentProcessing}
+                    />
+                  </div>
+
+                  <div className="p-3 bg-muted rounded-md text-sm">
+                    <p className="font-medium mb-1">📱 Simulation Mode:</p>
+                    <p className="text-muted-foreground">
+                      This is a demo. In production, you'll receive an actual M-Pesa STK push prompt on your phone.
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <div className="flex items-center gap-3 mb-2">
+                      <CreditCard className="w-10 h-10 text-blue-600" />
+                      <div>
+                        <p className="font-semibold text-blue-900 dark:text-blue-100">Card Payment</p>
+                        <p className="text-sm text-blue-700 dark:text-blue-300">Amount: {formatCurrency(total)}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Card Number</label>
+                      <input
+                        type="text"
+                        placeholder="4242 4242 4242 4242"
+                        className="w-full px-3 py-2 border rounded-md bg-background"
+                        disabled={paymentProcessing}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Expiry</label>
+                        <input
+                          type="text"
+                          placeholder="MM/YY"
+                          className="w-full px-3 py-2 border rounded-md bg-background"
+                          disabled={paymentProcessing}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">CVV</label>
+                        <input
+                          type="text"
+                          placeholder="123"
+                          className="w-full px-3 py-2 border rounded-md bg-background"
+                          disabled={paymentProcessing}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-muted rounded-md text-sm">
+                    <p className="font-medium mb-1">💳 Simulation Mode:</p>
+                    <p className="text-muted-foreground">
+                      This is a demo. In production, payments will be processed via Stripe or your payment gateway.
+                    </p>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <button
+                onClick={() => setShowPaymentModal(false)}
+                className="flex-1 px-4 py-2 border rounded-md hover:bg-accent transition-colors"
+                disabled={paymentProcessing}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handlePaymentSimulation}
+                disabled={paymentProcessing || (paymentMethod === "mpesa" && !mpesaPhone)}
+                className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {paymentProcessing ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <Lock className="h-4 w-4" />
+                    Pay {formatCurrency(total)}
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

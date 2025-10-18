@@ -235,25 +235,29 @@ export default function CartPage() {
               <span>KSh {subtotal.toLocaleString()}</span>
             </div>
 
-            {user ? (
-              <button
-                onClick={() => router.push("/checkout")}
-                className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-md font-medium hover:bg-primary/90 transition-colors"
-              >
-                Proceed to Checkout
-                <ArrowRight className="h-4 w-4" />
-              </button>
-            ) : (
-              <div className="space-y-3">
-                <Link
-                  href="/auth/login"
-                  className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-md font-medium hover:bg-primary/90 transition-colors"
-                >
-                  <User className="h-4 w-4" />
-                  Login to Checkout
-                </Link>
-                <p className="text-xs text-center text-muted-foreground">
-                  You need to be logged in to complete your purchase
+            {/* Checkout Button - Works for both logged-in and guest users */}
+            <button
+              onClick={() => router.push("/checkout")}
+              className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-md font-medium hover:bg-primary/90 transition-colors"
+            >
+              Proceed to Checkout
+              <ArrowRight className="h-4 w-4" />
+            </button>
+
+            {/* Guest Checkout Info */}
+            {!user && (
+              <div className="space-y-2 text-center">
+                <p className="text-xs text-muted-foreground">
+                  Already have an account?{" "}
+                  <Link
+                    href="/auth/login"
+                    className="text-primary hover:underline font-medium"
+                  >
+                    Log in
+                  </Link>
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Or continue as guest
                 </p>
               </div>
             )}
