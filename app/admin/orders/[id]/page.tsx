@@ -52,20 +52,12 @@ export default function OrderDetailPage() {
   const fetchOrder = async () => {
     try {
       setLoading(true);
-      // For now, we'll need to add this endpoint or fetch from the orders list
-      // Since we don't have a single order endpoint, let's use the list and filter
-      const response = await fetch(`/api/admin/orders/${params.id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-      
-      if (!response.ok) throw new Error("Failed to fetch order");
-      
-      const data = await response.json();
+      const { adminGetOrder } = await import("@/lib/api/endpoints");
+      const data = await adminGetOrder(parseInt(params.id as string));
       setOrder(data.order);
-    } catch (err) {
-      showToast("Failed to load order", "error");
+    } catch (err: any) {
+      console.error("Failed to load order:", err);
+      showToast(err.response?.data?.error || "Failed to load order. Order not found", "error");
       router.push("/admin/orders");
     } finally {
       setLoading(false);

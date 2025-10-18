@@ -138,53 +138,64 @@ export default function AdminOrdersPage() {
                 <tr key={order.id} className="hover:bg-muted/50">
                   <td className="px-4 md:px-6 py-4">
                     <div className="text-sm font-medium text-foreground">
-                      {order.order_number}
+                      #{order.order_number}
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      {order.user_id ? "Registered" : "Guest"}
-                    </div>
-                  </td>
-                  <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-xs text-muted-foreground mt-1 md:hidden">
                       {formatDate(order.created_at)}
                     </div>
                   </td>
-                  <td className="px-4 md:px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-foreground">
-                      KES {order.total_amount.toLocaleString()}
+                  <td className="hidden md:table-cell px-6 py-4">
+                    <div className="text-sm text-foreground">
+                      {new Date(order.created_at).toLocaleDateString("en-KE", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
                     </div>
-                    <div className="text-xs text-muted-foreground lg:hidden">
+                    <div className="text-xs text-muted-foreground">
+                      {new Date(order.created_at).toLocaleTimeString("en-KE", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </div>
+                  </td>
+                  <td className="px-4 md:px-6 py-4">
+                    <div className="text-sm font-semibold text-foreground">
+                      KSh {order.total_amount.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-muted-foreground capitalize lg:hidden">
                       {order.payment_method || "N/A"}
                     </div>
                   </td>
-                  <td className="hidden lg:table-cell px-6 py-4 whitespace-nowrap">
+                  <td className="hidden lg:table-cell px-6 py-4">
                     <span
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getPaymentBadge(
+                      className={`px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getPaymentBadge(
                         order.payment_status
                       )}`}
                     >
-                      {order.payment_status}
+                      {order.payment_status.charAt(0).toUpperCase() + order.payment_status.slice(1)}
                     </span>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {order.payment_method || "N/A"}
+                    <div className="text-xs text-muted-foreground mt-1.5 capitalize">
+                      via {order.payment_method || "N/A"}
                     </div>
                   </td>
-                  <td className="px-4 md:px-6 py-4 whitespace-nowrap">
+                  <td className="px-4 md:px-6 py-4">
                     <span
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadge(
+                      className={`px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadge(
                         order.status
                       )}`}
                     >
-                      {order.status}
+                      {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                     </span>
                   </td>
-                  <td className="px-4 md:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <td className="px-4 md:px-6 py-4 text-right text-sm font-medium">
                     <Link
                       href={`/admin/orders/${order.id}`}
-                      className="text-primary hover:text-primary/80"
-                      title="View Details"
+                      className="inline-flex items-center gap-1.5 text-primary hover:text-primary/80 font-medium"
+                      title="View Order Details"
                     >
-                      <Eye className="h-5 w-5 inline" />
+                      <span className="hidden sm:inline">View</span>
+                      <Eye className="h-4 w-4" />
                     </Link>
                   </td>
                 </tr>
