@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Save } from "lucide-react";
 import { adminCreateProduct } from "@/lib/api/endpoints";
+import { useToast } from "@/components/ui/toast";
 
 export default function NewProductPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const { showToast } = useToast();
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
@@ -25,10 +27,10 @@ export default function NewProductPage() {
 
     try {
       await adminCreateProduct(formData);
-      alert("Product created successfully!");
+      showToast("Product created successfully!", "success");
       router.push("/admin/products");
     } catch (err: any) {
-      alert(err.response?.data?.error || "Failed to create product");
+      showToast(err.response?.data?.error || "Failed to create product", "error");
     } finally {
       setLoading(false);
     }

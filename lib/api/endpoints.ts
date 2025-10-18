@@ -219,6 +219,11 @@ export const adminGetOrders = async () => {
   return response.data;
 };
 
+export const adminGetOrder = async (id: number) => {
+  const response = await api.get(`/api/admin/orders/${id}`);
+  return response.data;
+};
+
 export const adminUpdateOrderStatus = async (
   id: number,
   data: {
@@ -228,5 +233,11 @@ export const adminUpdateOrderStatus = async (
   }
 ) => {
   const response = await api.put(`/api/admin/orders/${id}/status`, data);
+  return response.data;
+};
+
+// Admin - Customers
+export const adminGetCustomers = async () => {
+  const response = await api.get("/api/admin/customers");
   return response.data;
 };

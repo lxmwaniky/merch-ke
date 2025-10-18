@@ -4,20 +4,19 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Plus, Edit, Trash2, FolderTree } from "lucide-react";
 import { adminGetCategories, adminDeleteCategory } from "@/lib/api/endpoints";
+import { useToast } from "@/components/ui/toast";
+import { Category } from "@/types/api";
+import ConfirmDialog from "@/components/ui/confirm-dialog";
 
-interface Category {
-  id: number;
-  name: string;
-  slug: string;
-  description: string;
-  is_active: boolean;
-  sort_order: number;
-}
-
-export default function AdminCategoriesPage() {
+export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const { showToast } = useToast();
   const [error, setError] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; categoryId: number | null }>({
+    isOpen: false,
+    categoryId: null,
+  });
 
   useEffect(() => {
     fetchCategories();
@@ -38,14 +37,12 @@ export default function AdminCategoriesPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this category?")) return;
-
     try {
       await adminDeleteCategory(id);
       setCategories(categories.filter((c) => c.id !== id));
-      alert("Category deleted successfully");
+      showToast("Category deleted successfully", "success");
     } catch (err: any) {
-      alert(err.response?.data?.error || "Failed to delete category");
+      showToast(err.response?.data?.error || "Failed to delete category", "error");
     }
   };
 
@@ -152,8 +149,8 @@ export default function AdminCategoriesPage() {
                         <Edit className="h-5 w-5" />
                       </Link>
                       <button
-                        onClick={() => handleDelete(category.id)}
-                        className="text-destructive hover:text-destructive/80"
+                        onClick={() => setDeleteConfirm({ isOpen: true, categoryId: category.id })}
+                        className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
                         title="Delete"
                       >
                         <Trash2 className="h-5 w-5" />
@@ -166,6 +163,22 @@ export default function AdminCategoriesPage() {
           </table>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteConfirm.isOpen}
+        onClose={() => setDeleteConfirm({ isOpen: false, categoryId: null })}
+        onConfirm={() => {
+          if (deleteConfirm.categoryId) {
+            handleDelete(deleteConfirm.categoryId);
+          }
+        }}
+        title="Delete Category"
+        message="Are you sure you want to delete this category? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        isDangerous={true}
+      />
     </div>
   );
 }

@@ -4,21 +4,19 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Plus, Edit, Trash2, Eye, Package } from "lucide-react";
 import { adminGetProducts, adminDeleteProduct } from "@/lib/api/endpoints";
+import { useToast } from "@/components/ui/toast";
+import { Product } from "@/types/api";
+import ConfirmDialog from "@/components/ui/confirm-dialog";
 
-interface Product {
-  id: number;
-  name: string;
-  slug: string;
-  base_price: number;
-  category_id: number;
-  is_active: boolean;
-  is_featured: boolean;
-}
-
-export default function AdminProductsPage() {
+export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const { showToast } = useToast();
   const [error, setError] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; productId: number | null }>({
+    isOpen: false,
+    productId: null,
+  });
 
   useEffect(() => {
     fetchProducts();
@@ -39,14 +37,12 @@ export default function AdminProductsPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this product?")) return;
-
     try {
       await adminDeleteProduct(id);
       setProducts(products.filter((p) => p.id !== id));
-      alert("Product deleted successfully");
+      showToast("Product deleted successfully", "success");
     } catch (err: any) {
-      alert(err.response?.data?.error || "Failed to delete product");
+      showToast(err.response?.data?.error || "Failed to delete product", "error");
     }
   };
 
@@ -174,8 +170,8 @@ export default function AdminProductsPage() {
                         <Edit className="h-5 w-5" />
                       </Link>
                       <button
-                        onClick={() => handleDelete(product.id)}
-                        className="text-destructive hover:text-destructive/80"
+                        onClick={() => setDeleteConfirm({ isOpen: true, productId: product.id })}
+                        className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
                         title="Delete"
                       >
                         <Trash2 className="h-5 w-5" />
@@ -188,6 +184,22 @@ export default function AdminProductsPage() {
           </table>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteConfirm.isOpen}
+        onClose={() => setDeleteConfirm({ isOpen: false, productId: null })}
+        onConfirm={() => {
+          if (deleteConfirm.productId) {
+            handleDelete(deleteConfirm.productId);
+          }
+        }}
+        title="Delete Product"
+        message="Are you sure you want to delete this product? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        isDangerous={true}
+      />
     </div>
   );
 }
