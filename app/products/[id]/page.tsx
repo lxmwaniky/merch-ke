@@ -36,9 +36,27 @@ export default function ProductDetailPage() {
         const imagesList = imagesData?.images || [];
         setImages(imagesList);
         
-        // Set primary image as selected
+        // Set primary image as selected, or use product.image_url as fallback
         const primaryImage = imagesList.find((img) => img.is_primary);
-        setSelectedImage(primaryImage || imagesList[0] || null);
+        if (primaryImage || imagesList[0]) {
+          setSelectedImage(primaryImage || imagesList[0]);
+        } else if (productData.image_url) {
+          // Create a pseudo-image from product.image_url
+          setSelectedImage({
+            id: 0,
+            product_id: productData.id,
+            image_url: productData.image_url,
+            image_path: productData.image_url,
+            alt_text: productData.name,
+            is_primary: true,
+            display_order: 1,
+            image_type: 'primary',
+            file_size: 0,
+            width: 0,
+            height: 0,
+            created_at: new Date().toISOString(),
+          });
+        }
       } catch (err) {
         console.error("Failed to load product:", err);
         setImages([]);
