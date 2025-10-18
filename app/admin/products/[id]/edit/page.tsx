@@ -40,7 +40,6 @@ export default function EditProductPage() {
       const data = await adminGetCategories();
       setCategories(data.categories || []);
     } catch (err) {
-      console.error("Failed to load categories:", err);
       showToast("Failed to load categories", "error");
     } finally {
       setCategoriesLoading(false);

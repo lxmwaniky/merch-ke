@@ -17,7 +17,6 @@ export default function CategoriesSection() {
         const topLevel = data.categories.filter((c) => c.parent_id === null && c.is_active);
         setCategories(topLevel.slice(0, 4));
       } catch (err) {
-        console.error("Failed to load categories:", err);
       } finally {
         setLoading(false);
       }

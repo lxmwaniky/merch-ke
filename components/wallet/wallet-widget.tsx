@@ -16,7 +16,6 @@ export function WalletWidget() {
       const response = await apiClient.get("/api/wallet/balance");
       setBalance(response.data.balance);
     } catch (err) {
-      console.error("Failed to fetch wallet balance", err);
     } finally {
       setLoading(false);
     }

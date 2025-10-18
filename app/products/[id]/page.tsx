@@ -58,7 +58,6 @@ export default function ProductDetailPage() {
           });
         }
       } catch (err) {
-        console.error("Failed to load product:", err);
         setImages([]);
       } finally {
         setLoading(false);
@@ -77,7 +76,6 @@ export default function ProductDetailPage() {
       await refreshCart();
       showToast(`Added ${quantity} item(s) to cart!`);
     } catch (err) {
-      console.error("Failed to add to cart:", err);
       showToast("Failed to add to cart", "error");
     } finally {
       setIsAdding(false);

@@ -29,7 +29,6 @@ export default function ProductsPage() {
       const data = await adminGetProducts();
       setProducts(data.products || []);
     } catch (err: any) {
-      console.error("Failed to load products:", err);
       setError(err.response?.data?.error || "Failed to load products");
     } finally {
       setLoading(false);

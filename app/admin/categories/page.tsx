@@ -29,7 +29,6 @@ export default function CategoriesPage() {
       const data = await adminGetCategories();
       setCategories(data.categories || []);
     } catch (err: any) {
-      console.error("Failed to load categories:", err);
       setError(err.response?.data?.error || "Failed to load categories");
     } finally {
       setLoading(false);

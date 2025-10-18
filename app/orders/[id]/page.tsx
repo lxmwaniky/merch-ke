@@ -47,7 +47,6 @@ export default function OrderDetailPage() {
       const data = await getOrder(orderId);
       setOrder(data);
     } catch (err: any) {
-      console.error("Failed to load order:", err);
       setError(err.response?.data?.error || "Failed to load order details");
     } finally {
       setLoading(false);

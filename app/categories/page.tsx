@@ -21,7 +21,6 @@ export default function CategoriesPage() {
         setCategories(categoriesData.categories.filter((c) => c.is_active));
         setProducts(productsData.products);
       } catch (err) {
-        console.error("Failed to load data:", err);
       } finally {
         setLoading(false);
       }

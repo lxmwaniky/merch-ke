@@ -36,7 +36,6 @@ export default function CartPage() {
       setSubtotal(data.subtotal || calculatedSubtotal);
       setTotalItems(data.total_items || items.reduce((sum, item) => sum + item.quantity, 0));
     } catch (err) {
-      console.error("Failed to load cart:", err);
       setCartItems([]);
     } finally {
       setLoading(false);
@@ -57,7 +56,6 @@ export default function CartPage() {
       await refreshCart();
       showToast("Cart updated");
     } catch (err) {
-      console.error("Failed to update cart:", err);
       showToast("Failed to update quantity", "error");
     } finally {
       setUpdatingItems((prev) => {
@@ -76,7 +74,6 @@ export default function CartPage() {
       await refreshCart();
       showToast("Item removed from cart");
     } catch (err) {
-      console.error("Failed to remove item:", err);
       showToast("Failed to remove item", "error");
     } finally {
       setUpdatingItems((prev) => {

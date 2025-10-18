@@ -30,7 +30,6 @@ function ProductsContent() {
         setProducts(productsData.products);
         setCategories(categoriesData.categories.filter((c) => c.is_active));
       } catch (err) {
-        console.error("Failed to load data:", err);
       } finally {
         setLoading(false);
       }

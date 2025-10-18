@@ -99,7 +99,6 @@ export default function CheckoutPage() {
       setCartItems(items);
       setSubtotal(data.subtotal || calculatedSubtotal);
     } catch (err) {
-      console.error("Failed to load cart:", err);
       showToast("Failed to load cart", "error");
       router.push("/cart");
     } finally {
@@ -214,7 +213,6 @@ export default function CheckoutPage() {
         notes: orderNotes || `Guest Email: ${isGuest ? guestEmail : user?.email}`
       };
 
-      console.log("📦 Sending order request:", JSON.stringify(orderData, null, 2));
       const response = await createOrder(orderData);
       
       // Store the order details for the success page
@@ -239,9 +237,6 @@ export default function CheckoutPage() {
       router.push(successUrl);
       
     } catch (err: any) {
-      console.error("Failed to place order:", err);
-      console.error("Error response:", err.response?.data);
-      console.error("Error status:", err.response?.status);
       
       let errorMessage = "Failed to place order. Please try again.";
       

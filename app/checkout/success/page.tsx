@@ -60,7 +60,6 @@ function CheckoutSuccessContent() {
         setError("Order details not found");
       }
     } catch (err) {
-      console.error("Failed to load guest order:", err);
       setError("Failed to load order details");
     } finally {
       setLoading(false);
@@ -72,7 +71,6 @@ function CheckoutSuccessContent() {
       const data = await getOrder(Number(orderId));
       setOrder(data);
     } catch (err: any) {
-      console.error("Failed to load order:", err);
       setError("Failed to load order details");
     } finally {
       setLoading(false);

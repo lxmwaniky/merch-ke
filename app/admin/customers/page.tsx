@@ -32,7 +32,6 @@ export default function AdminCustomersPage() {
       const data = await adminGetCustomers();
       setCustomers(data.customers || []);
     } catch (err: any) {
-      console.error("Failed to load customers:", err);
       setError(err.response?.data?.error || "Failed to load customers");
     } finally {
       setLoading(false);

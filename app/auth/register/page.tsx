@@ -50,13 +50,11 @@ export default function RegisterPage() {
         await migrateCart();
       } catch (err) {
         // Cart migration is optional, don't fail registration
-        console.log("No guest cart to migrate");
       }
 
       await refreshCart();
       router.push("/");
     } catch (err: any) {
-      console.error("Registration failed:", err);
       showToast(
         err.response?.data?.error || "Registration failed. Please try again.",
         "error"

@@ -44,17 +44,13 @@ export default function LoginPage() {
       // Migrate guest cart if exists
       try {
         await migrateCart();
-        console.log("✅ Guest cart migrated successfully");
       } catch (err: any) {
         // Cart migration is optional, don't fail login
-        console.log("⚠️ Cart migration failed (this is optional):", err.response?.status);
       }
 
       await refreshCart();
       router.push("/");
     } catch (err: any) {
-      console.error("Login failed:", err);
-      console.error("Error details:", {
         status: err.response?.status,
         statusText: err.response?.statusText,
         data: err.response?.data,

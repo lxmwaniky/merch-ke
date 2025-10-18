@@ -25,7 +25,6 @@ export default function ProductCard({ product }: ProductCardProps) {
       await refreshCart();
       showToast("Added to cart!");
     } catch (err) {
-      console.error("Failed to add to cart:", err);
       showToast("Failed to add to cart", "error");
     } finally {
       setIsAdding(false);

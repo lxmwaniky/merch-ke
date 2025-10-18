@@ -20,7 +20,6 @@ export default function FeaturedProducts() {
         setProducts(featured.length > 0 ? featured : data.products.slice(0, 6));
       } catch (err) {
         setError("Failed to load products");
-        console.error(err);
       } finally {
         setLoading(false);
       }
@@ -107,7 +106,6 @@ export default function FeaturedProducts() {
                       onClick={(e) => {
                         e.preventDefault();
                         // TODO: Add to cart functionality
-                        console.log("Add to cart:", product.id);
                       }}
                       className="p-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
                     >

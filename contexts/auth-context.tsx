@@ -32,7 +32,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = await getProfile();
       setUser(data.user);
     } catch (err: any) {
-      console.error("Failed to fetch user profile:", err);
       setUser(null);
       apiClient.clearToken();
     } finally {

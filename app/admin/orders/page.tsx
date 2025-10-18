@@ -33,7 +33,6 @@ export default function AdminOrdersPage() {
       const data = await adminGetOrders();
       setOrders(data.orders || []);
     } catch (err: any) {
-      console.error("Failed to load orders:", err);
       setError(err.response?.data?.error || "Failed to load orders");
     } finally {
       setLoading(false);

@@ -52,7 +52,6 @@ export default function OrderDetailPage() {
       const data = await adminGetOrder(parseInt(params.id as string));
       setOrder(data.order);
     } catch (err: any) {
-      console.error("Failed to load order:", err);
       showToast(err.response?.data?.error || "Failed to load order. Order not found", "error");
       router.push("/admin/orders");
     } finally {

@@ -16,21 +16,17 @@ class ApiClient {
     // Request interceptor - add auth token and session ID
     this.client.interceptors.request.use(
       (config) => {
-        // Add JWT token if available
         const token = this.getToken();
-        console.log("🔑 Request to:", config.url, "| Token:", token ? "EXISTS" : "MISSING");
         
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
-          console.log("✅ Added Authorization header");
         }
 
-        // Add session ID for guest users (if no token)
+        // Add session ID for guest users
         if (!token) {
           const sessionId = this.getSessionId();
           if (sessionId) {
             config.headers["X-Session-ID"] = sessionId;
-            console.log("✅ Added Session ID header");
           }
         }
 
@@ -47,15 +43,10 @@ class ApiClient {
       (error: AxiosError) => {
         if (error.response?.status === 401) {
           const requestUrl = error.config?.url || '';
-          console.log("❌ 401 Error on:", requestUrl);
-          
-          // Only clear token for authentication-related endpoints
-          // Don't clear token for optional operations like cart migration
           const authEndpoints = ['/api/auth/login', '/api/auth/register', '/api/auth/profile'];
           const isAuthEndpoint = authEndpoints.some(endpoint => requestUrl.includes(endpoint));
           
           if (isAuthEndpoint) {
-            console.log("🗑️ Auth endpoint failed - clearing token and redirecting");
             this.clearToken();
             if (typeof window !== "undefined") {
               const currentPath = window.location.pathname;
@@ -63,8 +54,6 @@ class ApiClient {
                 window.location.href = "/auth/login";
               }
             }
-          } else {
-            console.log("⚠️ Non-auth endpoint failed with 401 - keeping token");
           }
         }
         return Promise.reject(error);

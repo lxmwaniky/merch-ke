@@ -63,7 +63,6 @@ export default function AdminDashboard() {
         // Get recent 5 orders
         setRecentOrders(orders.slice(0, 5));
       } catch (err) {
-        console.error("Failed to fetch orders:", err);
       }
 
       // Fetch customers
@@ -72,7 +71,6 @@ export default function AdminDashboard() {
         const customersData = await adminGetCustomers();
         totalCustomers = customersData.total || customersData.customers?.length || 0;
       } catch (err) {
-        console.error("Failed to fetch customers:", err);
       }
 
       setStats({
@@ -82,7 +80,6 @@ export default function AdminDashboard() {
         totalRevenue,
       });
     } catch (err) {
-      console.error("Failed to fetch stats:", err);
     } finally {
       setLoading(false);
     }

@@ -40,7 +40,6 @@ export default function NewProductPage() {
         setFormData(prev => ({ ...prev, category_id: cats[0].id }));
       }
     } catch (err) {
-      console.error("Failed to load categories:", err);
       showToast("Failed to load categories", "error");
     } finally {
       setCategoriesLoading(false);
